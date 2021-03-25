@@ -9,8 +9,8 @@ import codecs
 import pandas as pd
 import numpy as np
 from keras_bert import Tokenizer
-from keras.optimizers import Adam
-from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
+from keras_bert import AdamWarmup, calc_train_steps
+from keras.callbacks import ModelCheckpoint
 
 from model import RBERT
 from config import *
@@ -66,7 +66,7 @@ class DataGenerator:
                 text = d[0].replace("$", "").replace("#", "")
                 text = text.replace("<e1>", "$").replace("</e1>", "$").replace("<e2>", "#").replace("</e2>", "#")
                 x1, x2 = tokenizer.encode(first=text, max_len=MAX_LEN)
-                # x1, x2 = x1, x2
+                x1[x1.index(102)] = 0   # 去掉[SEP]
                 X1.append(x1)
                 X2.append(x2)
                 # 寻找$,#的下标
@@ -76,12 +76,12 @@ class DataGenerator:
                 assert len(special_index_2) == 2, "#在文本中的数量不为2，请检查: {}".format(text)
                 mask1 = [0] * MAX_LEN
                 start1, end1 = special_index_1
-                for i in range(start1, end1+1):
-                    mask1[i] = 1 / (end1 + 1 - start1)
+                for i in range(start1+1, end1):
+                    mask1[i] = 1 / (end1-start1-1)
                 mask2 = [0] * MAX_LEN
                 start2, end2 = special_index_2
-                for i in range(start2, end2+1):
-                    mask2[i] = 1 / (end2 + 1 - start2)
+                for i in range(start2+1, end2):
+                    mask2[i] = 1 / (end2-start2-1)
                 MASK1.append(mask1)
                 MASK2.append(mask2)
 
@@ -100,12 +100,6 @@ class DataGenerator:
 # 构建模型
 def create_cls_model(num_labels):
     model = RBERT(BERT_CONFIG_PATH, BERT_CHECKPOINT_PATH, MAX_LEN, num_labels).create_model()
-    model.compile(
-        loss='categorical_crossentropy',
-        optimizer=Adam(1e-5),
-        metrics=['accuracy']
-    )
-
     return model
 
 
@@ -145,25 +139,31 @@ if __name__ == '__main__':
     test_D = DataGenerator(test_data)
 
     print("begin model training...")
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', min_delta=0.0001, patience=2, factor=0.1, min_lr=1e-7,
-                                  mode='auto',
-                                  verbose=1)
     # 保存最新的val_acc最好的模型文件
-    filepath = "models/per-rel-{epoch:02d}-{val_acc:.4f}.h5"
+    filepath = "models/%s-{epoch:02d}-{val_acc:.4f}.h5" % DATA_DIR.split("/")[-1]
     checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    # add warmup
+    total_steps, warmup_steps = calc_train_steps(
+        num_example=len(train_data),
+        batch_size=BATCH_SIZE,
+        epochs=EPOCH,
+        warmup_proportion=0.1,
+    )
+    optimizer = AdamWarmup(total_steps, warmup_steps, lr=5e-5, min_lr=1e-7)
+    model.compile(
+        loss='categorical_crossentropy',
+        optimizer=optimizer,
+        metrics=['accuracy']
+    )
     model.fit_generator(
         train_D.__iter__(),
         steps_per_epoch=len(train_D),
         epochs=EPOCH,
         validation_data=test_D.__iter__(),
         validation_steps=len(test_D),
-        callbacks=[checkpoint, reduce_lr]
+        callbacks=[checkpoint]
     )
     print("finish model training!")
-
-    # 模型保存
-    # model.save('people_relation.h5')
-    # print("Model saved!")
 
     result = model.evaluate_generator(test_D.__iter__(), steps=len(test_D))
     print("模型评估结果:", result)

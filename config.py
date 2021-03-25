@@ -10,7 +10,7 @@ TRAIN_FILE_PATH = "{}/train.csv".format(DATA_DIR)
 TEST_FILE_PATH = "{}/test.csv".format(DATA_DIR)
 
 # model
-BERT_MODEL_DIR = "chinese_wwm_ext"
+BERT_MODEL_DIR = "chinese-RoBERTa-wwm-ext"
 BERT_CONFIG_PATH = "{}/bert_config.json".format(BERT_MODEL_DIR)
 BERT_CHECKPOINT_PATH = "{}/bert_model.ckpt".format(BERT_MODEL_DIR)
 BERT_VOCAT_PATH = "{}/vocab.txt".format(BERT_MODEL_DIR)

@@ -7,18 +7,13 @@
 import os
 import json
 import pandas as pd
-from keras.models import load_model
-from keras_bert import get_custom_objects
 from sklearn.metrics import classification_report
 
-from model_train import token_dict, OurTokenizer
 from model_predict import predict_single_sample
 from config import *
 
 
 # 加载训练好的模型
-model = load_model("./models/per-rel-07-0.8227.h5", custom_objects=get_custom_objects())
-tokenizer = OurTokenizer(token_dict)
 with open(os.path.join(DATA_DIR, "label.json"), "r", encoding="utf-8") as f:
     label_dict = json.loads(f.read())
 

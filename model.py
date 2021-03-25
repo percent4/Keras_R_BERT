@@ -42,8 +42,8 @@ class RBERT(object):
         concat_layer = concatenate([cls_fc_layer, e1_fc_layer, e2_fc_layer], axis=-1)
 
         # FC layer for classification
-        fc_layer = Dense(100, activation="relu")(concat_layer)
-        output = Dense(self.num_labels, activation="softmax")(fc_layer)
+        # fc_layer = Dense(200, activation="relu")(concat_layer)
+        output = Dense(self.num_labels, activation="softmax")(concat_layer)
         model = Model([x1_in, x2_in, e1_mask, e2_mask], output)
         model.summary()
         return model
