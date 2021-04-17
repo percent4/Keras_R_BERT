@@ -80,6 +80,7 @@ $ python3 model_train.py
 $ python3 model_evalaute.py
 # Model: chinese_L-12_H-768_A-12, weighted avgage F1 = 82.74%
 # Model: chinese-RoBERTa-wwm-ext, weighted avgage F1 = 85.27%
+# Model: chinese-RoBERTa-wwm-ext-large, weighted avgage F1 = 85.74%
 ```
 
 Model: chinese_L-12_H-768_A-12, 详细的评估结果如下：
@@ -130,6 +131,31 @@ Model: chinese-RoBERTa-wwm-ext, 详细的评估结果如下：
     accuracy                         0.8531       776
    macro avg     0.8743    0.8381    0.8529       776
 weighted avg     0.8566    0.8531    0.8527       776
+```
+
+Model: chinese-RoBERTa-wwm-ext-large, 详细的评估结果如下：
+
+```
+              precision    recall  f1-score   support
+
+     unknown     0.8269    0.8230    0.8249       209
+         上下级     0.7500    0.6774    0.7119        31
+          亲戚     0.8824    0.6250    0.7317        24
+        兄弟姐妹     0.7805    0.9412    0.8533        34
+          合作     0.8545    0.7966    0.8246        59
+          同人     0.9487    0.9487    0.9487        39
+          同学     1.0000    0.9167    0.9565        24
+          同门     0.9615    0.9615    0.9615        26
+          夫妻     0.8182    0.9114    0.8623        79
+          好友     0.7812    0.8333    0.8065        30
+          师生     0.8286    0.7838    0.8056        37
+          情侣     0.8788    0.9355    0.9062        31
+          父母     0.9291    0.9219    0.9255       128
+          祖孙     0.8800    0.8800    0.8800        25
+
+    accuracy                         0.8582       776
+   macro avg     0.8657    0.8540    0.8571       776
+weighted avg     0.8597    0.8582    0.8574       776
 ```
 
  ## 模型预测

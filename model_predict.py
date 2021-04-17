@@ -13,7 +13,7 @@ from model_train import token_dict, OurTokenizer
 from config import *
 
 # 加载训练好的模型
-model = load_model("./models/people_relation-05-0.8546.h5", custom_objects=get_custom_objects())
+model = load_model("./models/people_relation-11-0.8712.h5", custom_objects=get_custom_objects())
 tokenizer = OurTokenizer(token_dict)
 with open(os.path.join(DATA_DIR, "label.json"), "r", encoding="utf-8") as f:
     label_dict = json.loads(f.read())
@@ -45,7 +45,7 @@ def predict_single_sample(text):
 
 if __name__ == '__main__':
     # 预测示例语句
-    predict_text = "程砚秋与<e1>果素瑛</e1>生有三子一女，即<e2>程永光</e2>、程永源、程永江和程慧贞。"
+    predict_text = "<e1>詹姆斯</e1>担任了该公司的经理，作为一名民主党人，他曾资助过<e2>克利夫兰</e2>的再度竞选，两人私交不错。"
     predict_label = predict_single_sample(predict_text)
     print("原句: {}\n预测关系: {}".format(predict_text, predict_label))
 

@@ -7,6 +7,7 @@
 from keras.models import Model
 from keras.utils import plot_model
 from keras.layers import Input, Lambda, Dense, Dropout, concatenate, Dot
+from keras.layers import GlobalMaxPool1D, Multiply, Add, Activation
 from keras_bert import load_trained_model_from_checkpoint
 
 
@@ -39,7 +40,11 @@ class RBERT(object):
         cls_fc_layer = self.crate_fc_layer(cls_layer, output_dim, dropout_rate=0.1)
         e1_fc_layer = self.crate_fc_layer(e1_layer, output_dim, dropout_rate=0.1)
         e2_fc_layer = self.crate_fc_layer(e2_layer, output_dim, dropout_rate=0.1)
-        concat_layer = concatenate([cls_fc_layer, e1_fc_layer, e2_fc_layer], axis=-1)
+        # 将concatenate改成gated mechanism
+        # concat_layer = concatenate([cls_fc_layer, e1_fc_layer, e2_fc_layer], axis=-1)
+        cls_e1_fusion = Add()([cls_fc_layer, e1_fc_layer])
+        cls_e2_fusion = Add()([cls_fc_layer, e2_fc_layer])
+        concat_layer = self.gated_mechanism(cls_e1_fusion, cls_e2_fusion, output_dim)
 
         # FC layer for classification
         # fc_layer = Dense(200, activation="relu")(concat_layer)
@@ -65,6 +70,16 @@ class RBERT(object):
         """
         avg_layer = Dot(axes=1)([e_mask, hidden_output])
         return avg_layer
+
+    @staticmethod
+    def gated_mechanism(x1, x2, HIDDEN_STATE_NUMBER):
+        vector1 = Dense(HIDDEN_STATE_NUMBER, input_dim=HIDDEN_STATE_NUMBER)(x1)
+        vector2 = Dense(HIDDEN_STATE_NUMBER, input_dim=HIDDEN_STATE_NUMBER)(x2)
+        sigmoid_value = Activation(activation="sigmoid")(Add()([vector1, vector2]))
+        tmp1 = Multiply()([sigmoid_value, x1])
+        tmp2 = Multiply()([Lambda(lambda x: 1 - x)(sigmoid_value), x2])
+        fusion_vector = Add()([tmp1, tmp2])
+        return fusion_vector
 
 
 if __name__ == '__main__':
